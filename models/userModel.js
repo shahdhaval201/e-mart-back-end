@@ -8,8 +8,7 @@ const userSchema = new mongoose.Schema({
     },
     lastname:{
         type:String,
-        required:true,
-       
+        required:true, 
     },
     email:{
         type:String,
@@ -45,7 +44,6 @@ const userSchema = new mongoose.Schema({
          type: String
      },  
 },
-
 {
     timestamps: true
  });

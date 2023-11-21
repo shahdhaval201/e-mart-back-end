@@ -16,7 +16,4 @@ router.put("/block-user/:id",authMiddleware,blockedUser)
 router.put("/unblock-user/:id",authMiddleware,unblockedUser)
 
 
-
-
-
 module.exports = router
