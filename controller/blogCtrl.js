@@ -14,7 +14,7 @@ const createBlog = asyncHandler(async (req, res) => {
 
 const updateBlog = asyncHandler(async (req, res) => {
   const { id } = req.params;
-
+  validateMongodbId(id);
   try {
     const updateBlog = await Blog.findByIdAndUpdate(id, req.body, {
       new: true,
@@ -27,6 +27,7 @@ const updateBlog = asyncHandler(async (req, res) => {
 
 const getBlog = asyncHandler(async (req, res) => {
   const { id } = req.params;
+  validateMongodbId(id);
   try {
     const getBlog = await Blog.findById(id)
       .populate("likes")
@@ -54,6 +55,7 @@ const getAllBlog = asyncHandler(async (req, res) => {
 
 const deleteBlog = asyncHandler(async (req, res) => {
   const { id } = req.params;
+  validateMongodbId(id);
 
   try {
     const deleteBlog = await Blog.findByIdAndDelete(id);
@@ -65,6 +67,7 @@ const deleteBlog = asyncHandler(async (req, res) => {
 
 const likeBlog = asyncHandler(async (req, res) => {
   const { blogId } = req.body;
+  validateMongodbId(blogId);
   console.log(blogId);
 
   // Find the blog which you want to be liked
@@ -122,6 +125,7 @@ const likeBlog = asyncHandler(async (req, res) => {
 
 const disLikeBlog = asyncHandler(async (req, res) => {
   const { blogId } = req.body;
+  validateMongodbId(blogId);
   console.log(blogId);
 
   // Find the blog which you want to be liked
