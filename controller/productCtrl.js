@@ -2,6 +2,7 @@ const Product = require("../models/productModel");
 const User = require("../models/userModel");
 const asyncHandler = require("express-async-handler");
 const slugify = require("slugify");
+const { cloudinaryUploadImage } = require("../utils/cloudinary");
 
 const createProduct = asyncHandler(async (req, res) => {
   try {
@@ -139,6 +140,77 @@ const addToWishlist = asyncHandler(async (req, res) => {
   }
 });
 
+const ratings = asyncHandler(async (req, res) => {
+  const { _id } = req.user;
+  const { productId, star, comment } = req.body;
+  try {
+    const product = await Product.findById(productId);
+    let alreadyRated = product.ratings.find(
+      (userId) => userId.postedBy.toString() === _id.toString()
+    );
+
+    if (alreadyRated) {
+      const updateRatings = await Product.updateOne(
+        { ratings: { $elemMatch: alreadyRated } },
+        { $set: { "ratings.$.star": star, "ratings.$.comment": comment } },
+        { new: true }
+      );
+    } else {
+      const ratings = await Product.findByIdAndUpdate(
+        productId,
+        {
+          $push: { ratings: { star: star, comment: comment, postedBy: _id } },
+        },
+        { new: true }
+      );
+    }
+    const getAllRatings = await Product.findById(productId);
+    let totalRatings = getAllRatings.ratings.length;
+    console.log(totalRatings);
+    let ratingSum = getAllRatings.ratings
+      .map((item) => item.star)
+      .reduce((prev, curr) => prev + curr, 0);
+    console.log(ratingSum);
+    let actualRating = Math.round(ratingSum / totalRatings);
+    let finalProduct = await Product.findByIdAndUpdate(
+      productId,
+      { totalratings: actualRating },
+      { new: true }
+    );
+    res.json(finalProduct);
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
+const uploadImages = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  try {
+    const uploader = (path) => cloudinaryUploadImage(path, "images");
+    const urls = [];
+    const files = req.files;
+    for (const file of files) {
+      const { path } = file;
+      const newPath = await uploader(path);
+      urls.push(newPath);
+    }
+    const findProduct = await Product.findByIdAndUpdate(
+      id,
+      {
+        images: urls.map((file) => {
+          return file;
+        }),
+      },
+      {
+        new: true,
+      }
+    );
+    res.json(findProduct);
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
 module.exports = {
   createProduct,
   getProduct,
@@ -146,4 +218,6 @@ module.exports = {
   updateProduct,
   deleteProduct,
   addToWishlist,
+  ratings,
+  uploadImages,
 };
