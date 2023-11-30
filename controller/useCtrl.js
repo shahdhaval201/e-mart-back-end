@@ -55,6 +55,45 @@ const loginUserCtrl = asyncHandler(async (req, res) => {
   }
 });
 
+// Admin login
+
+const loginAdmin = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+
+  // Find user by email && password
+
+  const findAdmin = await User.findOne({ email });
+  console.log(findAdmin);
+  if (findAdmin.role !== "admin") throw new Error("Not Authorized");
+  if (findAdmin && (await findAdmin.isPasswordMatched(password))) {
+    const refreshToken = await generateRefreshToken(findAdmin?._id);
+    console.log(refreshToken);
+    const updateUser = await User.findByIdAndUpdate(
+      findAdmin?._id,
+      {
+        refreshToken: refreshToken,
+      },
+      { new: true }
+    );
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      maxAge: 72 * 60 * 60 * 1000,
+    });
+
+    res.json({
+      _id: findAdmin?._id,
+      firstname: findAdmin?.firstname,
+      lastname: findAdmin?.lastname,
+      email: findAdmin?.email,
+      mobile: findAdmin?.mobile,
+      token: generateToken(findAdmin?._id),
+    });
+  } else {
+    throw new Error("Invalid Credentials");
+  }
+});
+
 // Handle Refresh Token
 
 const handleRefreshToken = asyncHandler(async (req, res) => {
@@ -247,6 +286,38 @@ const resetPassword = asyncHandler(async (req, res) => {
   res.json(user);
 });
 
+// save the address
+
+const saveAddress = asyncHandler(async (req, res) => {
+  const { _id } = req.user;
+  try {
+    const address = await User.findByIdAndUpdate(
+      _id,
+      {
+        address: req?.body?.address,
+      },
+      {
+        new: true,
+      }
+    );
+    res.json(address);
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
+//get WishList
+
+const getWishList = asyncHandler(async (req, res) => {
+  const { _id } = req.user;
+  try {
+    const user = await User.findById(_id).populate("wishlist");
+    res.json(user);
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
 module.exports = {
   createUser,
   loginUserCtrl,
@@ -261,4 +332,7 @@ module.exports = {
   updatePassword,
   forgotPasswordToken,
   resetPassword,
+  loginAdmin,
+  getWishList,
+  saveAddress,
 };

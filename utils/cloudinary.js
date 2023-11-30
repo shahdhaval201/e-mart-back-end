@@ -4,6 +4,7 @@ cloudinary.config({
   cloud_name: "dwfswe89p",
   api_key: "274528344155141",
   api_secret: "CTNlpr8OZcr-MU2XJSpI_zNtJxg",
+  secure: true,
 });
 
 const cloudinaryUploadImage = async (fileToUpload) => {
